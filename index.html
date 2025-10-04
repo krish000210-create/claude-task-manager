@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Prep Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .fade-in {
+            animation: fadeIn 0.3s ease-out;
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-indigo-100 via-purple-100 to-pink-100 p-6">
+    <div class="max-w-7xl mx-auto">
+        <div class="bg-white rounded-2xl shadow-2xl overflow-hidden">
+            <!-- Header -->
+            <div class="bg-gradient-to-r from-indigo-600 to-purple-600 p-8 text-white">
+                <h1 class="text-4xl font-bold mb-2">Student Prep Dashboard</h1>
+                <p class="text-indigo-200">Organize your study time effectively</p>
+            </div>
+
+            <!-- Tabs -->
+            <div class="flex gap-1 p-2 bg-gray-50 border-b border-gray-200">
+                <button onclick="switchTab('daily')" id="tab-daily" class="flex items-center gap-2 px-6 py-3 rounded-lg font-medium transition-all bg-white text-indigo-600 shadow-md">
+                    <i data-lucide="calendar" class="w-5 h-5"></i>
+                    Daily Tasks
+                </button>
+                <button onclick="switchTab('progress')" id="tab-progress" class="flex items-center gap-2 px-6 py-3 rounded-lg font-medium transition-all text-gray-600 hover:bg-white hover:bg-opacity-50">
+                    <i data-lucide="check-circle" class="w-5 h-5"></i>
+                    Progress Tracker
+                </button>
+                <button onclick="switchTab('pomodoro')" id="tab-pomodoro" class="flex items-center gap-2 px-6 py-3 rounded-lg font-medium transition-all text-gray-600 hover:bg-white hover:bg-opacity-50">
+                    <i data-lucide="clock" class="w-5 h-5"></i>
+                    Pomodoro Timer
+                </button>
+                <button onclick="switchTab('alarms')" id="tab-alarms" class="flex items-center gap-2 px-6 py-3 rounded-lg font-medium transition-all text-gray-600 hover:bg-white hover:bg-opacity-50">
+                    <i data-lucide="bell" class="w-5 h-5"></i>
+                    Alarms
+                </button>
+            </div>
+
+            <!-- Content -->
+            <div class="p-8">
+                <!-- Daily Tasks Tab -->
+                <div id="content-daily" class="fade-in">
+                    <h2 class="text-2xl font-bold mb-4">
+                        Daily Tasks (<span id="current-date"></span>)
+                    </h2>
+                    <div class="flex gap-2 mb-6">
+                        <input
+                            type="text"
+                            id="new-task-text"
+                            placeholder="Add a new task"
+                            class="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-transparent"
+                        />
+                        <input
+                            type="date"
+                            id="selected-date"
+                            class="px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-transparent"
+                        />
+                        <button
+                            onclick="addTask()"
+                            class="px-6 py-3 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 transition-colors"
+                        >
+                            Add
+                        </button>
+                    </div>
+
+                    <div id="task-list" class="flex flex-col gap-2 mb-8"></div>
+
+                    <div class="mt-8">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="text-xl font-bold">Task Calendar</h3>
+                            <div class="flex items-center gap-4">
+                                <button
+                                    onclick="changeTaskMonth(-1)"
+                                    class="p-2 bg-gray-200 text-gray-700 rounded-full hover:bg-gray-300 transition-colors"
+                                >
+                                    <i data-lucide="chevron-left" class="w-5 h-5"></i>
+                                </button>
+                                <span id="task-calendar-month" class="font-semibold min-w-[150px] text-center"></span>
+                                <button
+                                    onclick="changeTaskMonth(1)"
+                                    class="p-2 bg-gray-200 text-gray-700 rounded-full hover:bg-gray-300 transition-colors"
+                                >
+                                    <i data-lucide="chevron-right" class="w-5 h-5"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div id="task-calendar" class="grid grid-cols-7 gap-1"></div>
+                    </div>
+                </div>
+
+                <!-- Progress Tracker Tab -->
+                <div id="content-progress" class="hidden fade-in">
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-2xl font-bold">Progress Tracker</h2>
+                        <div class="flex items-center gap-4">
+                            <button
+                                onclick="changeProgressMonth(-1)"
+                                class="p-2 bg-gray-200 text-gray-700 rounded-full hover:bg-gray-300 transition-colors"
+                            >
+                                <i data-lucide="chevron-left" class="w-5 h-5"></i>
+                            </button>
+                            <span id="progress-calendar-month" class="font-semibold min-w-[150px] text-center"></span>
+                            <button
+                                onclick="changeProgressMonth(1)"
+                                class="p-2 bg-gray-200 text-gray-700 rounded-full hover:bg-gray-300 transition-colors"
+                            >
+                                <i data-lucide="chevron-right" class="w-5 h-5"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-4 mb-4">
+                        <span class="text-sm text-gray-600">Select a mark and click a day:</span>
+                        <button
+                            onclick="selectMark('check')"
+                            id="mark-check"
+                            class="p-2 rounded-full border-2 bg-green-100 border-green-500"
+                        >
+                            <i data-lucide="check-circle" class="w-6 h-6 text-green-600"></i>
+                        </button>
+                        <button
+                            onclick="selectMark('cross')"
+                            id="mark-cross"
+                            class="p-2 rounded-full border-2 bg-gray-100 border-transparent"
+                        >
+                            <i data-lucide="x-circle" class="w-6 h-6 text-red-600"></i>
+                        </button>
+                    </div>
+                    <div id="progress-calendar" class="grid grid-cols-7 gap-1"></div>
+                </div>
+
+                <!-- Pomodoro Timer Tab -->
+                <div id="content-pomodoro" class="hidden fade-in">
+                    <div class="max-w-md mx-auto text-center">
+                        <h2 class="text-2xl font-bold mb-6">Pomodoro Timer</h2>
+                        <div class="flex justify-center gap-4 mb-6">
+                            <button
+                                onclick="changeTimerMode('focus')"
+                                id="mode-focus"
+                                class="px-6 py-3 rounded-lg font-medium transition-colors bg-indigo-600 text-white shadow-lg"
+                            >
+                                Focus<br /><small>(25m)</small>
+                            </button>
+                            <button
+                                onclick="changeTimerMode('short')"
+                                id="mode-short"
+                                class="px-6 py-3 rounded-lg font-medium transition-colors bg-gray-200 text-gray-700 hover:bg-gray-300"
+                            >
+                                Short Break<br /><small>(5m)</small>
+                            </button>
+                            <button
+                                onclick="changeTimerMode('long')"
+                                id="mode-long"
+                                class="px-6 py-3 rounded-lg font-medium transition-colors bg-gray-200 text-gray-700 hover:bg-gray-300"
+                            >
+                                Long Break<br /><small>(15m)</small>
+                            </button>
+                        </div>
+                        <div class="relative w-80 h-80 mx-auto mb-6">
+                            <div class="absolute inset-0 bg-gradient-to-br from-indigo-100 via-purple-100 to-pink-100 rounded-full"></div>
+                            <div class="absolute inset-4 bg-white rounded-full shadow-inner flex flex-col items-center justify-center">
+                                <div id="timer-display" class="text-6xl font-bold text-gray-900">25:00</div>
+                                <div id="timer-status" class="text-gray-600 mt-2">Ready to focus!</div>
+                            </div>
+                        </div>
+                        <div class="flex justify-center gap-4">
+                            <button
+                                onclick="toggleTimer()"
+                                id="timer-btn"
+                                class="px-8 py-3 bg-green-500 text-white rounded-full font-bold hover:bg-green-600 transition-colors"
+                            >
+                                START
+                            </button>
+                            <button
+                                onclick="resetTimer()"
+                                class="px-8 py-3 bg-gray-300 text-gray-700 rounded-full font-bold hover:bg-gray-400 transition-colors"
+                            >
+                                RESET
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Alarms Tab -->
+                <div id="content-alarms" class="hidden fade-in">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div>
+                            <h2 class="text-2xl font-bold mb-4">Set a New Alarm</h2>
+                            <div class="flex flex-col gap-4">
+                                <input
+                                    type="text"
+                                    id="new-alarm-desc"
+                                    placeholder="Task Description"
+                                    class="px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-transparent"
+                                />
+                                <div class="flex items-center gap-4">
+                                    <input
+                                        type="time"
+                                        id="new-alarm-time"
+                                        value="11:30"
+                                        class="px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-transparent"
+                                    />
+                                    <label class="flex items-center gap-2 text-gray-700 text-sm">
+                                        <input type="checkbox" id="new-alarm-repeat" />
+                                        Repeat Daily
+                                    </label>
+                                </div>
+                                <button
+                                    onclick="addAlarm()"
+                                    class="px-6 py-3 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 transition-colors"
+                                >
+                                    Set Alarm
+                                </button>
+                            </div>
+                        </div>
+                        <div>
+                            <h2 class="text-2xl font-bold mb-4">Upcoming Alarms</h2>
+                            <div id="alarm-list" class="flex flex-col gap-3"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // State
+        let tasks = [];
+        let selectedDate = new Date().toISOString().split('T')[0];
+        let taskCalendarDate = new Date();
+        let progressCalendarDate = new Date();
+        let progressMarks = {};
+        let selectedMark = 'check';
+        let timerMode = 'focus';
+        let timeLeft = 25 * 60;
+        let timerInterval = null;
+        let isTimerRunning = false;
+        let alarms = [{ id: 1, time: '11:30', description: 'Sample Alarm', repeat: false }];
+
+        const timerModes = {
+            focus: 25 * 60,
+            short: 5 * 60,
+            long: 15 * 60
+        };
+
+        // Initialize
+        document.getElementById('selected-date').value = selectedDate;
+        document.getElementById('current-date').textContent = new Date(selectedDate).toLocaleDateString();
+        renderTaskCalendar();
+        renderProgressCalendar();
+        renderAlarms();
+        lucide.createIcons();
+
+        // Tab switching
+        function switchTab(tabName) {
+            // Hide all content
+            document.querySelectorAll('[id^="content-"]').forEach(el => el.classList.add('hidden'));
+            // Remove active from all tabs
+            document.querySelectorAll('[id^="tab-"]').forEach(el => {
+                el.classList.remove('bg-white', 'text-indigo-600', 'shadow-md');
+                el.classList.add('text-gray-600');
+            });
+            // Show selected content
+            document.getElementById('content-' + tabName).classList.remove('hidden');
+            // Activate selected tab
+            const activeTab = document.getElementById('tab-' + tabName);
+            activeTab.classList.add('bg-white', 'text-indigo-600', 'shadow-md');
+            activeTab.classList.remove('text-gray-600');
+            lucide.createIcons();
+        }
+
+        // Tasks
+        function addTask() {
+            const taskInput = document.getElementById('new-task-text');
+            const text = taskInput.value.trim();
+            
+            if (text) {
+                tasks.push({
+                    id: Date.now(),
+                    text: text,
+                    date: selectedDate,
+                    completed: false
+                });
+                taskInput.value = '';
+                renderTasks();
+                renderTaskCalendar();
+            }
+        }
+
+        function renderTasks() {
+            const todayTasks = tasks.filter(t => t.date === selectedDate);
+            const html = todayTasks.map(task => `
+                <div class="flex items-center gap-3 p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                    <input
+                        type="checkbox"
+                        ${task.completed ? 'checked' : ''}
+                        onchange="toggleTask(${task.id})"
+                    />
+                    <span class="flex-1 text-gray-900 ${task.completed ? 'line-through text-gray-400' : ''}">${task.text}</span>
+                    <button onclick="deleteTask(${task.id})" class="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors">
+                        <i data-lucide="trash-2" class="w-4 h-4"></i>
+                    </button>
+                </div>
+            `).join('');
+            document.getElementById('task-list').innerHTML = html;
+            lucide.createIcons();
+        }
+
+        function toggleTask(id) {
+            tasks = tasks.map(t => t.id === id ? { ...t, completed: !t.completed } : t);
+            renderTasks();
+        }
+
+        function deleteTask(id) {
+            tasks = tasks.filter(t => t.id !== id);
+            renderTasks();
+            renderTaskCalendar();
+        }
+
+        // Calendar navigation
+        function changeTaskMonth(direction) {
+            taskCalendarDate.setMonth(taskCalendarDate.getMonth() + direction);
+            renderTaskCalendar();
+        }
+
+        function changeProgressMonth(direction) {
+            progressCalendarDate.setMonth(progressCalendarDate.getMonth() + direction);
+            renderProgressCalendar();
+        }
+
+        // Calendar rendering
+        function renderTaskCalendar() {
+            const calendar = document.getElementById('task-calendar');
+            calendar.innerHTML = renderCalendar(taskCalendarDate, false);
+            document.getElementById('task-calendar-month').textContent = 
+                taskCalendarDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+            lucide.createIcons();
+        }
+
+        function renderProgressCalendar() {
+            const calendar = document.getElementById('progress-calendar');
+            calendar.innerHTML = renderCalendar(progressCalendarDate, true);
+            document.getElementById('progress-calendar-month').textContent = 
+                progressCalendarDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+            lucide.createIcons();
+        }
+
+        function renderCalendar(calendarDate, isProgress) {
+            const year = calendarDate.getFullYear();
+            const month = calendarDate.getMonth();
+            const firstDay = new Date(year, month, 1).getDay();
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+            
+            let html = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+                .map(day => `<div class="text-center font-semibold text-gray-700 p-2 text-sm">${day}</div>`).join('');
+            
+            for (let i = 0; i < firstDay; i++) {
+                html += '<div class="h-16"></div>';
+            }
+            
+            for (let day = 1; day <= daysInMonth; day++) {
+                const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                const dayTasks = tasks.filter(t => t.date === dateStr);
+                const mark = progressMarks[dateStr];
+                const markedClass = mark === 'check' ? 'bg-green-50' : mark === 'cross' ? 'bg-red-50' : '';
+
+                html += `<div class="h-16 border border-gray-200 rounded-lg flex flex-col items-center justify-center transition-all ${isProgress ? 'cursor-pointer hover:bg-gray-50' : ''} ${markedClass}" ${isProgress ? `onclick="markDay('${dateStr}')"` : ''}>
+                    <span class="text-sm font-medium">${day}</span>`;
+
+                if (!isProgress && dayTasks.length > 0) {
+                    html += '<div class="flex gap-1 mt-1">' + dayTasks.slice(0, 3).map(() => '<div class="w-1 h-1 bg-indigo-600 rounded-full"></div>').join('') + '</div>';
+                }
+
+                if (isProgress && mark === 'check') {
+                    html += '<i data-lucide="check-circle" class="w-5 h-5 text-green-600 mt-1"></i>';
+                }
+                if (isProgress && mark === 'cross') {
+                    html += '<i data-lucide="x-circle" class="w-5 h-5 text-red-600 mt-1"></i>';
+                }
+
+                html += '</div>';
+            }
+            return html;
+        }
+
+        // Progress tracking
+        function selectMark(mark) {
+            selectedMark = mark;
+            document.getElementById('mark-check').className = mark === 'check' ? 'p-2 rounded-full border-2 bg-green-100 border-green-500' : 'p-2 rounded-full border-2 bg-gray-100 border-transparent';
+            document.getElementById('mark-cross').className = mark === 'cross' ? 'p-2 rounded-full border-2 bg-red-100 border-red-500' : 'p-2 rounded-full border-2 bg-gray-100 border-transparent';
+        }
+
+        function markDay(dateStr) {
+            if (progressMarks[dateStr] === selectedMark) {
+                delete progressMarks[dateStr];
+            } else {
+                progressMarks[dateStr] = selectedMark;
+            }
+            renderProgressCalendar();
+        }
+
+        // Timer
+        function changeTimerMode(mode) {
+            timerMode = mode;
+            timeLeft = timerModes[mode];
+            isTimerRunning = false;
+            clearInterval(timerInterval);
+            updateTimerDisplay();
+            document.getElementById('mode-focus').className = mode === 'focus' ? 'px-6 py-3 rounded-lg font-medium transition-colors bg-indigo-600 text-white shadow-lg' : 'px-6 py-3 rounded-lg font-medium transition-colors bg-gray-200 text-gray-700 hover:bg-gray-300';
+            document.getElementById('mode-short').className = mode === 'short' ? 'px-6 py-3 rounded-lg font-medium transition-colors bg-indigo-600 text-white shadow-lg' : 'px-6 py-3 rounded-lg font-medium transition-colors bg-gray-200 text-gray-700 hover:bg-gray-300';
+            document.getElementById('mode-long').className = mode === 'long' ? 'px-6 py-3 rounded-lg font-medium transition-colors bg-indigo-600 text-white shadow-lg' : 'px-6 py-3 rounded-lg font-medium transition-colors bg-gray-200 text-gray-700 hover:bg-gray-300';
+            document.getElementById('timer-btn').textContent = 'START';
+            document.getElementById('timer-status').textContent = 'Ready to focus!';
+        }
+
+        function toggleTimer() {
+            if (isTimerRunning) {
+                clearInterval(timerInterval);
+                isTimerRunning = false;
+                document.getElementById('timer-btn').textContent = 'START';
+                document.getElementById('timer-status').textContent = 'Ready to focus!';
+            } else {
+                isTimerRunning = true;
+                document.getElementById('timer-btn').textContent = 'PAUSE';
+                document.getElementById('timer-status').textContent = timerMode === 'focus' ? 'Focus time!' : timerMode === 'short' ? 'Short break' : 'Long break';
+                timerInterval = setInterval(() => {
+                    if (timeLeft > 0) {
+                        timeLeft--;
+                        updateTimerDisplay();
+                    } else {
+                        toggleTimer();
+                    }
+                }, 1000);
+            }
+        }
+
+        function resetTimer() {
+            clearInterval(timerInterval);
+            isTimerRunning = false;
+            timeLeft = timerModes[timerMode];
+            updateTimerDisplay();
+            document.getElementById('timer-btn').textContent = 'START';
+            document.getElementById('timer-status').textContent = 'Ready to focus!';
+        }
+
+        function updateTimerDisplay() {
+            const mins = Math.floor(timeLeft / 60);
+            const secs = timeLeft % 60;
+            document.getElementById('timer-display').textContent = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+        }
+
+        // Alarms
+        function addAlarm() {
+            const descInput = document.getElementById('new-alarm-desc');
+            const timeInput = document.getElementById('new-alarm-time');
+            const repeatInput = document.getElementById('new-alarm-repeat');
+            const desc = descInput.value.trim();
+            const time = timeInput.value;
+            const repeat = repeatInput.checked;
+            if (desc && time) {
+                alarms.push({
+                    id: Date.now(),
+                    description: desc,
+                    time: time,
+                    repeat: repeat
+                });
+                descInput.value = '';
+                repeatInput.checked = false;
+                renderAlarms();
+            }
+        }
+
+        function deleteAlarm(id) {
+            alarms = alarms.filter(a => a.id !== id);
+            renderAlarms();
+        }
+
+        function renderAlarms() {
+            const alarmList = document.getElementById('alarm-list');
+            alarmList.innerHTML = alarms.map(alarm => `
+                <div class="p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors flex justify-between items-start">
+                    <div>
+                        <div class="text-xl font-bold text-gray-900">${alarm.time}</div>
+                        <div class="text-gray-600">${alarm.description}</div>
+                        <div class="text-xs text-gray-400">${alarm.repeat ? 'Daily' : 'One Time'}</div>
+                    </div>
+                    <button onclick="deleteAlarm(${alarm.id})" class="p-2 text-red-600 hover:bg-red-100 rounded-lg transition-colors">
+                        <i data-lucide="trash-2" class="w-4 h-4"></i>
+                    </button>
+                </div>
+            `).join('');
+            lucide.createIcons();
+        }
+
+        // Event listeners
+        document.getElementById('new-task-text').addEventListener('keypress', e => {
+            if (e.key === 'Enter') addTask();
+        });
+
+        document.getElementById('selected-date').addEventListener('change', e => {
+            selectedDate = e.target.value;
+            document.getElementById('current-date').textContent = new Date(selectedDate).toLocaleDateString();
+            renderTasks();
+        });
+
+        // Initial render of tasks
+        function renderTasks() {
+            const todayTasks = tasks.filter(t => t.date === selectedDate);
+            const html = todayTasks.map(task => `
+                <div class="flex items-center gap-3 p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                    <input
+                        type="checkbox"
+                        ${task.completed ? 'checked' : ''}
+                        onchange="toggleTask(${task.id})"
+                    />
+                    <span class="flex-1 text-gray-900 ${task.completed ? 'line-through text-gray-400' : ''}">${task.text}</span>
+                    <button onclick="deleteTask(${task.id})" class="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors">
+                        <i data-lucide="trash-2" class="w-4 h-4"></i>
+                    </button>
+                </div>
+            `).join('');
+            document.getElementById('task-list').innerHTML = html;
+            lucide.createIcons();
+        }
+
+        function toggleTask(id) {
+            tasks = tasks.map(t => t.id === id ? { ...t, completed: !t.completed } : t);
+            renderTasks();
+        }
+
+        function deleteTask(id) {
+            tasks = tasks.filter(t => t.id !== id);
+            renderTasks();
+            renderTaskCalendar();
+        }
+    </script>
+</body>
+</html>
